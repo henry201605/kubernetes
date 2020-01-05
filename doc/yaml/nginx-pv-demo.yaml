@@ -1,0 +1,54 @@
+# 定义PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 2Gi    
+  nfs:
+    path: /nfs/data/nginx     
+    server: 39.105.208.211  
+    
+---
+# 定义PVC，用于消费PV
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  
+---
+# 定义Pod，指定需要使用的PVC
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels: 
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: mysql
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-persistent-storage
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-persistent-storage
+        persistentVolumeClaim:
+          claimName: nginx-pvc

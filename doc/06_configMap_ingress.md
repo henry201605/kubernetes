@@ -103,18 +103,16 @@ www-data@henry002:/etc/nginx$ grep 'server_name tomcat.henry.com' nginx.conf -C 
 
 (6)此时我们可能会发现，原来nginx ingress controller就是一个nginx，而所谓的ingress.yaml文件中配置的内容像tomcat.henry.com就会对应到nginx.conf中。
 
-(7)但是，不可能每次都进入到容器里面来修改，而且还需要手动重启nginx，很麻烦
+但是，不可能每次都进入到容器里面来修改，而且还需要手动重启nginx，这样会很麻烦，
 
-此时我们会向有没有一个更好的方法，比如在K8s中有对应的方式，修改了什么就能修改nginx.conf文件
+于是我们会想有没有一个更好的方法，比如在K8s中有对应的方式，修改了什么就能修改nginx.conf文件。
 
-(8)先查看一下nginx.conf文件中的内容，比如找个属性：proxy_connect_timeout 5s
+(8)下面先查看一下nginx.conf文件中的内容，比如找个属性：proxy_connect_timeout 5s
 
 ```shell
 `查看proxy_connect_timeout`
 www-data@henry002:/etc/nginx$ grep 'proxy_connect_timeout' nginx.conf     
 			proxy_connect_timeout                   5s;
-			proxy_connect_timeout                   5s;
-
 ```
 
 下面我们使用configmap的方式将proxy_connect_timeout的值改为10s
@@ -134,8 +132,12 @@ metadata:
   labels:
     app: ingress-nginx
 data:
-  proxy_connect_timeout: "10"
+  proxy-connect-timeout: "10"   #这里有个坑，到家一定要注意是'-'不是‘_’
 ```
+
+* 对于参数的修改可以参考`官网：`https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
+
+  ![image-20200104195553852](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20200104195553852.png)
 
 2>查看  ingress-nginx命名空间下的configmap
 
@@ -165,10 +167,16 @@ udp-services                      0      103m
 
 (9)再次查看nginx.conf文件
 
+```shell
+`查看proxy_connect_timeout`
+www-data@henry002:/etc/nginx$ grep 'proxy_connect_timeout' nginx.conf     
+			proxy_connect_timeout                   10s;
+```
 
 
-> (10)其实定义规则都在nginx ingress controller的官网中
->
+
+(10)最后大家可以到nginx ingress controller的官网中，做详细了解
+
 > <https://kubernetes.github.io/ingress-nginx/>
 >
 > <https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/>
